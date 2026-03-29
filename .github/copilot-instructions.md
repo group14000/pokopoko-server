@@ -34,10 +34,15 @@ These instructions apply to all tasks in this workspace.
 
 ## Prisma Conventions
 - Use the existing Prisma setup in this repository (`prisma/schema.prisma`, `prisma.config.ts`).
+- For PostgreSQL runtime in this repo, initialize PrismaClient with `@prisma/adapter-pg` in `PrismaService`.
 - Use standard Prisma CLI workflow:
   - `pnpm prisma generate`
   - `pnpm prisma migrate dev --name <name>`
 - Keep Prisma changes focused (schema, migrations, and required service wiring only).
+
+## Clerk Conventions
+- Ensure `.env` values are loaded before initializing Clerk middleware (for example, `import 'dotenv/config'` in `src/main.ts`).
+- Pass `CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` explicitly to `clerkMiddleware` in backend runtime setup.
 
 ## Command-Line Workflow
 Use these commands by default when relevant:
