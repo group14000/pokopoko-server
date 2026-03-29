@@ -5,6 +5,7 @@ import { clerkMiddleware } from '@clerk/express';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(clerkMiddleware());
+  app.enableShutdownHooks();
   await app.listen(process.env.PORT ?? 5000);
 }
 bootstrap();
