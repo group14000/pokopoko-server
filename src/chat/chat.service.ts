@@ -63,20 +63,54 @@ export class ChatService {
       throw new NotFoundException('Receiver not found');
     }
 
-    const createdMessage = await this.prisma.message.create({
-      data: {
-        senderId,
-        receiverId: payload.receiverId,
-        content: payload.message,
-        timestamp: new Date(payload.timestamp),
-      },
-      select: {
-        id: true,
-        senderId: true,
-        receiverId: true,
-        content: true,
-        timestamp: true,
-      },
+    const [userAId, userBId] =
+      senderId < payload.receiverId
+        ? [senderId, payload.receiverId]
+        : [payload.receiverId, senderId];
+
+    const createdMessage = await this.prisma.$transaction(async (tx) => {
+      const conversation = await tx.conversation.upsert({
+        where: {
+          userAId_userBId: {
+            userAId,
+            userBId,
+          },
+        },
+        update: {},
+        create: {
+          userAId,
+          userBId,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const message = await tx.message.create({
+        data: {
+          senderId,
+          receiverId: payload.receiverId,
+          content: payload.message,
+          timestamp: new Date(payload.timestamp),
+          conversationId: conversation.id,
+        },
+        select: {
+          id: true,
+          senderId: true,
+          receiverId: true,
+          content: true,
+          timestamp: true,
+        },
+      });
+
+      await tx.conversation.update({
+        where: { id: conversation.id },
+        data: {
+          lastMessageId: message.id,
+        },
+      });
+
+      return message;
     });
 
     return {

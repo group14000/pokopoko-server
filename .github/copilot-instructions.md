@@ -57,6 +57,19 @@ These instructions apply to all tasks in this workspace.
 - For Clerk auth over WebSocket, verify token during socket connection and disconnect unauthorized clients.
 - When using Postman Socket.IO for testing, ensure event listeners are added explicitly (for example, `receive_message` and `chat_error`).
 
+## Conversations API Conventions
+- Use `GET /conversations` (guarded by `ClerkAuthGuard`) to power the chat-list screen.
+- Keep one-to-one conversation identity canonical using ordered pair fields (`userAId`, `userBId`) with a unique constraint.
+- Conversation list response should remain minimal:
+  - `conversationId`
+  - `otherUser` (`id`, `name`, `email`, `imageUrl`)
+  - `lastMessage` (`message`, `timestamp`)
+  - `updatedAt`
+- Sort conversations by `updatedAt` descending.
+- Update conversation metadata transactionally whenever a message is saved (create/update pair, set `lastMessageId`, keep `updatedAt` fresh).
+- Avoid N+1 in conversations fetch; use Prisma nested `select` to fetch only required fields.
+- For historical data, ensure conversation rows are backfilled from existing messages when required.
+
 ## Command-Line Workflow
 Use these commands by default when relevant:
 - Install dependencies: `pnpm install`

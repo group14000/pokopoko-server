@@ -6,6 +6,7 @@ import { UsersModule } from './users/users.module';
 import { FriendsModule } from './friends/friends.module';
 import { ChatModule } from './chat/chat.module';
 import { MessagesModule } from './messages/messages.module';
+import { ConversationsModule } from './conversations/conversations.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { MessagesModule } from './messages/messages.module';
     FriendsModule,
     ChatModule,
     MessagesModule,
+    ConversationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

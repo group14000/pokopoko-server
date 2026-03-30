@@ -24,6 +24,8 @@ model User {
   friendshipsAsB Friendship[] @relation("FriendshipsAsB")
   messagesSent Message[] @relation("MessagesSent")
   messagesReceived Message[] @relation("MessagesReceived")
+  conversationsAsA Conversation[] @relation("ConversationsAsA")
+  conversationsAsB Conversation[] @relation("ConversationsAsB")
 
   @@index([name])
   @@index([createdAt])
@@ -46,12 +48,33 @@ model Message {
   id         String   @id @default(cuid())
   senderId   String
   receiverId String
+  conversationId String?
   content    String
   timestamp  DateTime
   createdAt  DateTime @default(now())
   sender     User     @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
   receiver   User     @relation("MessagesReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+  conversation Conversation? @relation("ConversationMessages", fields: [conversationId], references: [id], onDelete: SetNull)
+  lastOfConversation Conversation? @relation("ConversationLastMessage")
 
   @@index([senderId, receiverId, timestamp])
   @@index([receiverId, timestamp])
+  @@index([conversationId, timestamp])
+}
+
+model Conversation {
+  id            String   @id @default(cuid())
+  userAId       String
+  userBId       String
+  lastMessageId String?  @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  userA         User     @relation("ConversationsAsA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB         User     @relation("ConversationsAsB", fields: [userBId], references: [id], onDelete: Cascade)
+  lastMessage   Message? @relation("ConversationLastMessage", fields: [lastMessageId], references: [id], onDelete: SetNull)
+  messages      Message[] @relation("ConversationMessages")
+
+  @@unique([userAId, userBId])
+  @@index([userAId, updatedAt])
+  @@index([userBId, updatedAt])
 }
