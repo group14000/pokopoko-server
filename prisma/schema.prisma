@@ -22,6 +22,8 @@ model User {
   updatedAt DateTime @updatedAt
   friendshipsAsA Friendship[] @relation("FriendshipsAsA")
   friendshipsAsB Friendship[] @relation("FriendshipsAsB")
+  messagesSent Message[] @relation("MessagesSent")
+  messagesReceived Message[] @relation("MessagesReceived")
 
   @@index([name])
   @@index([createdAt])
@@ -38,4 +40,18 @@ model Friendship {
   @@unique([userAId, userBId])
   @@index([userAId])
   @@index([userBId])
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  content    String
+  timestamp  DateTime
+  createdAt  DateTime @default(now())
+  sender     User     @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("MessagesReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, receiverId, timestamp])
+  @@index([receiverId, timestamp])
 }
