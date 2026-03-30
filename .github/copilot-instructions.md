@@ -44,6 +44,19 @@ These instructions apply to all tasks in this workspace.
 - Ensure `.env` values are loaded before initializing Clerk middleware (for example, `import 'dotenv/config'` in `src/main.ts`).
 - Pass `CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` explicitly to `clerkMiddleware` in backend runtime setup.
 
+## Chat/WebSocket Conventions
+- Use Socket.IO namespace `/chat` for chat connections.
+- Keep event contract explicit:
+  - Client emit: `send_message` (also tolerate default Socket.IO `message` where practical).
+  - Server emit: `receive_message`.
+  - Server error event: `chat_error`.
+- Keep payload shape stable for send message:
+  - `receiverId` (local DB user id, not Clerk id)
+  - `message`
+  - `timestamp` (ISO string)
+- For Clerk auth over WebSocket, verify token during socket connection and disconnect unauthorized clients.
+- When using Postman Socket.IO for testing, ensure event listeners are added explicitly (for example, `receive_message` and `chat_error`).
+
 ## Command-Line Workflow
 Use these commands by default when relevant:
 - Install dependencies: `pnpm install`
