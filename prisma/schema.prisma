@@ -20,7 +20,22 @@ model User {
   imageUrl  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  friendshipsAsA Friendship[] @relation("FriendshipsAsA")
+  friendshipsAsB Friendship[] @relation("FriendshipsAsB")
 
   @@index([name])
   @@index([createdAt])
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  userAId   String
+  userBId   String
+  createdAt DateTime @default(now())
+  userA     User     @relation("FriendshipsAsA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB     User     @relation("FriendshipsAsB", fields: [userBId], references: [id], onDelete: Cascade)
+
+  @@unique([userAId, userBId])
+  @@index([userAId])
+  @@index([userBId])
 }
