@@ -16,6 +16,7 @@ import {
 } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { SendMessageDto } from './dto/send-message.dto';
+import { MarkAsReadDto } from './dto/mark-as-read.dto';
 import { WsExceptionFilter } from './ws-exception.filter';
 
 type SocketAuthData = {
@@ -29,6 +30,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private server!: Server;
 
   private readonly messageValidationPipe = new ValidationPipe({
+    transform: true,
+    whitelist: true,
+  });
+
+  private readonly markAsReadValidationPipe = new ValidationPipe({
     transform: true,
     whitelist: true,
   });
@@ -102,6 +108,53 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() payload: SendMessageDto,
   ) {
     return this.processSendMessage(client, payload);
+  }
+
+  @SubscribeMessage('mark_as_read')
+  async handleMarkAsRead(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: MarkAsReadDto,
+  ) {
+    const validatedPayload = await this.markAsReadValidationPipe.transform(
+      payload,
+      {
+        type: 'body',
+        metatype: MarkAsReadDto,
+      },
+    );
+
+    const readerId = (client.data as SocketAuthData).localUserId;
+    if (!readerId) {
+      client.emit('chat_error', { message: 'Unauthorized' });
+      return;
+    }
+
+    try {
+      const result = await this.chatService.markConversationAsRead(
+        readerId,
+        validatedPayload.userId,
+      );
+
+      const senderSocketIds = this.chatService.getOnlineSocketIds(
+        validatedPayload.userId,
+      );
+
+      for (const socketId of senderSocketIds) {
+        this.server.to(socketId).emit('messages_read', {
+          byUserId: readerId,
+          withUserId: validatedPayload.userId,
+          markedCount: result.markedCount,
+          readAt: result.readAt,
+        });
+      }
+
+      return { status: 'ok', ...result };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Read receipt update failed';
+      client.emit('chat_error', { message });
+      return;
+    }
   }
 
   private async processSendMessage(client: Socket, payload: SendMessageDto) {

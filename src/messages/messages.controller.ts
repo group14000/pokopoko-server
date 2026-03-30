@@ -1,4 +1,11 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ClerkAuthGuard } from '../auth/clerk-auth/clerk-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { GetMessagesParamsDto } from './dto/get-messages-params.dto';
@@ -10,6 +17,17 @@ import { MessagesService } from './messages.service';
 @UseGuards(ClerkAuthGuard)
 export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
+
+  @Patch('read/:userId')
+  async markMessagesAsRead(
+    @CurrentUser() auth: { userId?: string | null },
+    @Param() params: GetMessagesParamsDto,
+  ): Promise<{ markedCount: number }> {
+    return this.messagesService.markConversationAsRead(
+      auth.userId,
+      params.userId,
+    );
+  }
 
   @Get(':userId')
   async getMessages(

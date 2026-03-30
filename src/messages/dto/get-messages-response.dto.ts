@@ -4,6 +4,7 @@ export class MessageItemDto {
   receiverId!: string;
   message!: string;
   timestamp!: Date;
+  readAt?: Date | null;
 }
 
 export class GetMessagesResponseDto {

@@ -51,6 +51,7 @@ model Message {
   conversationId String?
   content    String
   timestamp  DateTime
+  readAt     DateTime?
   createdAt  DateTime @default(now())
   sender     User     @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
   receiver   User     @relation("MessagesReceived", fields: [receiverId], references: [id], onDelete: Cascade)
@@ -60,6 +61,7 @@ model Message {
   @@index([senderId, receiverId, timestamp])
   @@index([receiverId, timestamp])
   @@index([conversationId, timestamp])
+  @@index([receiverId, conversationId, readAt])
 }
 
 model Conversation {

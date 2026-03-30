@@ -89,6 +89,7 @@ export class MessagesService {
         receiverId: true,
         content: true,
         timestamp: true,
+        readAt: true,
       },
     });
 
@@ -104,11 +105,35 @@ export class MessagesService {
       receiverId: message.receiverId,
       message: message.content,
       timestamp: message.timestamp,
+      readAt: message.readAt,
     }));
 
     return {
       messages: responseMessages,
       nextCursor,
+    };
+  }
+
+  async markConversationAsRead(
+    clerkUserId: string | null | undefined,
+    otherUserId: string,
+  ): Promise<{ markedCount: number }> {
+    const me = await this.resolveAuthenticatedUser(clerkUserId);
+    await this.ensureUserExists(otherUserId);
+
+    const updated = await this.prisma.message.updateMany({
+      where: {
+        senderId: otherUserId,
+        receiverId: me.id,
+        readAt: null,
+      },
+      data: {
+        readAt: new Date(),
+      },
+    });
+
+    return {
+      markedCount: updated.count,
     };
   }
 }

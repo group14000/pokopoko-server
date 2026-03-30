@@ -93,6 +93,7 @@ export class ChatService {
           content: payload.message,
           timestamp: new Date(payload.timestamp),
           conversationId: conversation.id,
+          readAt: null,
         },
         select: {
           id: true,
@@ -100,6 +101,7 @@ export class ChatService {
           receiverId: true,
           content: true,
           timestamp: true,
+          readAt: true,
         },
       });
 
@@ -119,6 +121,38 @@ export class ChatService {
       receiverId: createdMessage.receiverId,
       message: createdMessage.content,
       timestamp: createdMessage.timestamp,
+      readAt: createdMessage.readAt,
+    };
+  }
+
+  async markConversationAsRead(
+    readerUserId: string,
+    otherUserId: string,
+  ): Promise<{ markedCount: number; readAt: Date }> {
+    const otherUser = await this.prisma.user.findUnique({
+      where: { id: otherUserId },
+      select: { id: true },
+    });
+
+    if (!otherUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    const readAt = new Date();
+    const updated = await this.prisma.message.updateMany({
+      where: {
+        senderId: otherUserId,
+        receiverId: readerUserId,
+        readAt: null,
+      },
+      data: {
+        readAt,
+      },
+    });
+
+    return {
+      markedCount: updated.count,
+      readAt,
     };
   }
 }

@@ -15,4 +15,5 @@ export class ConversationItemDto {
   otherUser!: ConversationOtherUserDto;
   lastMessage!: ConversationLastMessageDto;
   updatedAt!: Date;
+  unreadCount!: number;
 }

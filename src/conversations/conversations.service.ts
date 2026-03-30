@@ -66,6 +66,16 @@ export class ConversationsService {
             timestamp: true,
           },
         },
+        _count: {
+          select: {
+            messages: {
+              where: {
+                receiverId: me.id,
+                readAt: null,
+              },
+            },
+          },
+        },
         updatedAt: true,
       },
     });
@@ -86,6 +96,7 @@ export class ConversationsService {
             timestamp: conversation.lastMessage!.timestamp,
           },
           updatedAt: conversation.updatedAt,
+          unreadCount: conversation._count.messages,
         };
       });
   }
